@@ -50,3 +50,13 @@ and dataset links are in it alongside other versions of the dataset that
 could be easier/lead to better results):
 https://towardsdatascience.com/learn-to-reproduce-papers-beginners-guide-2b4bff8fcca0
 ###########
+
+Alex suggestions:
+- Performance Analysis of Placement prediction system using Support Vector Machine over Random Forest Algorithm: 10.1109/MACS56771.2022.10023271
+- Walmart Sales Forecasting using XGBoost algorithm and Feature engineering: 10.1109/ICBASE51474.2020.00103
+- Gender Detection using Facial Features with Support Vector Machine: 10.1109/ICMNWC56175.2022.10031856
+
+Final choices:
+- https://arxiv.org/abs/1608.00367
+- Gender Detection using Facial Features with Support Vector Machine: 10.1109/ICMNWC56175.2022.10031856
+- Walmart Sales Forecasting using XGBoost algorithm and Feature engineering: 10.1109/ICBASE51474.2020.00103
