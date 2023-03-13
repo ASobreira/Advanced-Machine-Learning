@@ -63,9 +63,12 @@ Final choices:
 
 
 ---
+Report:
+1- Goal of the Project
+2- libryries, tools used to reach goal
+3- Dataset that is going to be used for that
+4- Dataset characteristics, problems and how is intended to solve them
 
-~DESCREVER DATASET
-- problemas e propostas para resolução
+Presentation:
+one slide with goal, dataset, and librarys, tools
 
-~DESCREVER OBJETIVOS
-_ e quais a bibliotecas que vamos usar para resolver
