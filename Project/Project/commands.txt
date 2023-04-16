@@ -1,15 +1,19 @@
- ssh <USER>@di.fc.ul.pt@machine-learning.di.fc.ul.pt
+ connect: ssh fc59451@alunos.fc.ul.pt@machine-learning.di.fc.ul.pt
 
-1. scp -r Project fc59451@alunos.fc.ul.pt@machine-learning.di.fc.ul.pt: (r de recursive para folders com vários itens)
+- (push) scp -r Project fc59451@alunos.fc.ul.pt@machine-learning.di.fc.ul.pt: (r de recursive para folders com vários itens)
 
-2. srun to run .py
+- (pull) scp fc59451@alunos.fc.ul.pt@machine-learning.di.fc.ul.pt:2nd_assignment/results_itemsets.txt /c/Users/afbso/Desktop/server/ 
 
-3. nano to edit file (CTRL + O; ENTER; CTRL + X) (SAVE; CONFIRM; EXIT)
 
-4. chmod -x  remove the execute permission from a file
+- nano (to edit file (CTRL + O; ENTER; CTRL + X) (SAVE; CONFIRM; EXIT))
 
-5. less to view (no modify)  file
+- chmod -x  (remove the execute permission from a file)
 
-6. rm file.txt
+- less (to view (no modify)  file)
 
-7. exit / CTRL D
+- rm file.txt (-r for folders)+
+
+- exit / CTRL D
+
+- mv maximal_closed_itemsets.py problem02.py (change file name)
+

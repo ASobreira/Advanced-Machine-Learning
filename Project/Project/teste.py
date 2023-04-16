@@ -9,21 +9,20 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from skimage.color import rgb2gray
-import tensorflow as tf
-from keras.models import Sequential
-from keras.layers import Convolution2D, MaxPooling2D, Flatten, Dense, Dropout, GlobalAveragePooling2D
-from keras.applications import VGG16
+
+
 
 #----
 
 #path server
 path = "UTKFace/"
 
-#path martim
+##path martim
 #path = "../../../../DadosProj/UTKFace/"
-#path alex
-#ath = "../../../data_project/UTKFace/"
-
+##path alex
+#path = "../../../data_project/UTKFace/"
+##path server
+path = "../../UTKFace/"
 files = os.listdir(path)
 size = len(files)
 print("Total samples:",size)
