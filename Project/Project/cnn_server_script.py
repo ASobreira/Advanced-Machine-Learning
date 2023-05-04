@@ -562,28 +562,40 @@ autoencoder.fit(x = X_train,
 new_model = Model(input, enc)
 
 
-pred_train = new_model.predict(X_train)
-pred_test = new_model.predict(X_test)
+encoded_train = new_model.predict(X_train)
+encoded_test = new_model.predict(X_test)
 
 
 
-encoded_train = np.asarray(pred_train)
+encoded_train = np.asarray(encoded_train)
 y_train = np.asarray(y_train)
 
-encoded_test = np.asarray(pred_test)
+encoded_test = np.asarray(encoded_test)
 y_test = np.asarray(y_test)
 
-model = CNN((200, 200, 3), 1, 'sigmoid')
+cnn = Sequential()
+
+# Input shape is (2000,)
+cnn.add(layers.Reshape((40, 50, 1), input_shape=encoded_train[0].shape))
+cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
+##cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+cnn.add(Flatten())
+cnn.add(layers.Dense(64, activation='relu'))
+cnn.add(layers.Dropout(0.2))
+cnn.add(layers.Dense(1, activation='sigmoid'))
 
 #for age use categorical_crossentropy instead
-model.compile(optimizer="adam", loss="binary_crossentropy")
+#for age use categorical_crossentropy instead
+cnn.compile(optimizer="adam", loss="binary_crossentropy")
 
-history_autoencoder_gender = model.fit(encoded_train, y_train,
+history_autoencoder_gender = cnn.fit(encoded_train, y_train,
                     epochs=3,
                     batch_size=32,
                     validation_data=(encoded_test, y_test))
 
-prediction_metrics(model, encoded_test, y_test, genders)
+prediction_metrics(cnn, encoded_test, y_test, genders)
 
 
 ##### AGE
@@ -609,29 +621,41 @@ autoencoder.fit(x = X_train,
 
 
 new_model = Model(input, enc)
+encoded_train = new_model.predict(X_train)
+encoded_test = new_model.predict(X_test)
 
-pred_train = new_model.predict(X_train)
-pred_test = new_model.predict(X_test)
 
-
-encoded_train = np.asarray(pred_train)
+encoded_train = np.asarray(encoded_train)
 y_train = np.asarray(y_train)
 
-encoded_test = np.asarray(pred_test)
+encoded_test = np.asarray(encoded_test)
 y_test = np.asarray(y_test)
 
-model = CNN((200,200,3), 6, 'softmax')
+cnn = Sequential()
+
+# Input shape is (3200,)
+cnn.add(layers.Reshape((40, 50, 1), input_shape=encoded_train[0].shape))
+cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
+##cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+cnn.add(Flatten())
+cnn.add(layers.Dense(64, activation='relu'))
+cnn.add(layers.Dropout(0.2))
+cnn.add(layers.Dense(6, activation='softmax'))
+
+#cnn.summary()
 
 
-model.compile(loss='categorical_crossentropy',
+cnn.compile(loss='categorical_crossentropy',
             optimizer='adam',
             metrics=['accuracy'])
 
-history_base_age = model.fit(encoded_train, y_train,
+history_base_age = cnn.fit(encoded_train, y_train,
         batch_size=8,
         epochs=2,
         validation_data=(encoded_test, y_test),)
 
 
 
-prediction_metrics(model, X_test, y_test, age_classes)
+prediction_metrics(cnn, X_test, y_test, age_classes)

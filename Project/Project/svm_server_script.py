@@ -453,6 +453,21 @@ latent_dim = 2000"""
 
 
 
+input = layers.Input(shape=(200, 200, 3))
+
+#valor alto apanha artefactos, e valor baixo nao captura bem as features da imagem
+latent_dim = 2000
+
+
+## Classe 
+print("encoder started")
+# Encoder
+
+#didnt increase filter count in encoder and decrease equally in decoder because
+#it can lead to overfitting
+
+
+
 x = layers.Conv2D(64, (3,3), activation='relu', padding='same', strides = 2)(input)
 #x = layers.MaxPooling2D((2,2), padding='same')(x)#dividir imagem por factor de 2
 x = layers.Conv2D(32, (3,3), activation='relu', padding='same', strides = 2)(x)#reduziu se nr de filtros para 32 porque foi decidido factor de 32 filtros
@@ -488,7 +503,6 @@ output = layers.Conv2DTranspose(3, (3,3), activation='sigmoid', padding='same', 
 #example:
 #x = layers.Conv2D(16, (3,3), activation='relu', padding='same', strides = 2)(x)
 
-
 # Autoencoder
 autoencoder = Model(input, output)
 
@@ -496,6 +510,7 @@ autoencoder = Model(input, output)
 autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
 #autoencoder.summary()
 
+print("svm encoder for gender started")
 ##### Gender
 X_train, X_test, y_train, y_test = train_test_split(images, genders, test_size=0.2, random_state=42)
 
@@ -505,8 +520,10 @@ X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2], 3))
 
+
+# binary cross entropy is good for image feature extraction especially when images are normalized
 autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
-autoencoder.summary()### Save this completly
+autoencoder.summary()
 
 #using validation_data is good for detecting overfitting as 
 #it does early stopping when the performance is no longer improving
@@ -525,6 +542,7 @@ pred_test = new_model.predict(X_test)
 
 encoded_X_train = pred_train.reshape((pred_train.shape[0], -1))
 encoded_X_test = pred_test.reshape((pred_test.shape[0], -1))
+
 
 clf = SVC()
 clf.fit(encoded_X_train, y_train)
@@ -554,22 +572,20 @@ plt.title('Confusion Matrix')
 plt.savefig('CM SVM Gender AE.png')
 
 print("AC gender finished")
-
+print("svm encoder for gender finished")
 #### AGE
-
+print("svm encoder for age started")
 X_train, X_test, y_train, y_test = train_test_split(images, age_categories, test_size=0.2, random_state=42)
-
 X_train = np.array(X_train)
 X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape[2], 3))
 
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2], 3))
 
-input = layers.Input(shape=(200, 200, 3))
-
 # binary cross entropy is good for image feature extraction especially when images are normalized
 autoencoder.compile(optimizer="adam", loss='categorical_crossentropy')
 autoencoder.summary()
+
 
 autoencoder.fit(x = X_train, 
                 y = X_train,
@@ -604,11 +620,4 @@ mcc = matthews_corrcoef(y_test_int, y_pred_int)
 print("MCC: ", mcc)
 print(classification_report(y_test_int, y_pred_int))
 print(confusion_matrix(y_test_int, y_pred_int))
-print("Autoencoder Finish")
-
-
-finish_time = datetime.now()
-finish_time = finish_time.strftime("%H:%M:%S")
-
-print("Initial Time =", initial_time)
-print("Current Time =", finish_time)
+print("svm encoder for age finished")
