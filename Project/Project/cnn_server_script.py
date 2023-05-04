@@ -1,4 +1,4 @@
-### packages
+######
 import numpy as np
 import pandas as pd 
 import os
@@ -27,13 +27,8 @@ from sklearn.svm import SVC
 import math
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import classification_report, confusion_matrix
-from datetime import datetime
 
-initial_time = datetime.now()
-initial_time = initial_time.strftime("%H:%M:%S")
-
-### Functions
-
+#######
 def display(img):
     plt.imshow(img)
     plt.show()
@@ -59,11 +54,10 @@ def prediction_metrics(model, X_test, y_test, classes):
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
-    plt.show()
+    plt.savefig("fig" + str(model) + " " + str(classes))
     print(classification_report(truth, preds))
-
-### Data
-print("data gathering started")
+    
+#### 
 #path server
 #path = "/UTKFace/"
 #path martim
@@ -76,7 +70,8 @@ size = len(files)
 print("Total samples:",size)
 print(files[0])
 
-#### Data Pre processing
+
+####
 images = []
 ages = []
 genders = []
@@ -103,11 +98,11 @@ for file in files:
     # third number is ethnicity (0 for white, 1 for black, 2 for asian, 3 for indian, 4 for any other ethnicity)
 
     counter += 1
+    
+X = np.squeeze(images)
 
-print("data gathering finished")
+#####
 
-### Age classes
-print("Age Classes started")
 age_classes = []
 for i in ages:
     i = int(i)
@@ -123,7 +118,8 @@ for i in ages:
         age_classes.append(4)
     if i>=60:
         age_classes.append(5)
-
+        
+        
 age_labels = ["Baby",   # index 0
         "Infant",       # index 1
         "Adolescent",   # index 2 
@@ -134,92 +130,73 @@ age_labels = ["Baby",   # index 0
 
 age_categories = to_categorical(age_classes, num_classes=6)
 age_categories[:20]
-print("Age Classes finished")
 
-### Plots Data distribution
+##### BASE CNN
 
-#x_genders = list(set(genders))
-#y_genders= [genders.count(i) for i in x_genders]
-#plt.bar(x_genders,y_genders)
-#plt.show()
-#print("Max value:",max(genders))
-#plt.savefig('Plots Data distribution Gender.png')
 
-#x_ages = list(set(age_classes))
-#y_ages = [age_classes.count(i) for i in x_ages]
-#plt.bar(x_ages,y_ages)
-#plt.show()
-#print("Max value:",max(age_classes))
-#plt.savefig('Plots Data distribution Age.png')
+def CNN (input_shape, output, activation):
+    model = tf.keras.Sequential()
 
-#### SVM
+    # Must define the input shape in the first layer of the neural network
+    
+    model.add(tf.keras.layers.Conv2D(filters=64, kernel_size=2, padding='same', activation='relu', input_shape = input_shape)) 
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=2))
+    model.add(tf.keras.layers.Dropout(0.3))
 
-"""##### BASE
-print("BASE SVM started")
-flattened_images = []
+    model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=2, padding='same', activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=2))
+    model.add(tf.keras.layers.Dropout(0.3))
 
-for image in images:
-    flattened_image = image.flatten()
-    flattened_images.append(flattened_image)
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(256, activation='relu'))
+    model.add(tf.keras.layers.Dropout(0.5))
+    model.add(tf.keras.layers.Dense(output, activation=activation))
+    
+    model.summary()
+    
+    return model
 
-flattened_images_array = np.array(flattened_images)
-
-print(flattened_images_array.shape)
 
 ###### Gender
-X_train, X_test, y_train, y_test = train_test_split(flattened_images_array, genders, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, genders, test_size=0.2, random_state=42)
 
-clf = SVC()
-clf.fit(X_train, y_train)
+X_train = np.asarray(X_train)
+y_train = np.asarray(y_train)
 
-# Evaluate the classifier on the testing data
-y_pred = clf.predict(X_test)
+X_test = np.asarray(X_test)
+y_test = np.asarray(y_test)
 
-mcc = matthews_corrcoef(y_test, y_pred)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-#print("Accuracy: ", accuracy)
-print(classification_report(y_test, y_pred))
-#confusion_matrix(y_test, y_pred)
+model = CNN((200,200,3), 1, 'sigmoid')
 
-labelGender = list(set(genders))
 
-# assume y_true and y_pred are the true and predicted labels, respectively
-cm = confusion_matrix(y_test, y_pred)
+#for age use categorical_crossentropy instead
+model.compile(optimizer="adam", loss="binary_crossentropy")
 
-# create a heatmap of the confusion matrix using seaborn
-sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+history_base_gender = model.fit(X_train, y_train,
+                    epochs=3,
+                    batch_size=32,
+                    validation_data=(X_test, y_test))
 
-# set plot labels and title
-plt.xlabel('Predicted Label')
-plt.ylabel('True Label')
-plt.title('Confusion Matrix')
-plt.savefig('CM SVM Gender.png')
+prediction_metrics(model, X_test, y_test, age_classes)
 
-##### Age
-X_train, X_test, y_train, y_test = train_test_split(flattened_images_array, age_categories, test_size=0.2, random_state=42)
+###### AGE
+X_train, X_test, y_train, y_test = train_test_split(X, age_categories, test_size = 0.2, shuffle = True)
+model = CNN((200,200,3), 6, 'softmax')
 
-clf = OneVsRestClassifier(SVC())
-clf.fit(X_train, y_train)
+model.compile(loss='categorical_crossentropy',
+            optimizer='adam',
+            metrics=['accuracy'])
 
-# Convert one-hot encoded labels to integer form
-y_pred = clf.predict(X_test)
+history_base_age = model.fit(X_train, y_train,
+        batch_size=8,
+        epochs=2,
+        validation_data=(X_test, y_test),)
 
-y_test_int = np.argmax(y_test, axis=1)
-y_pred_int = np.argmax(y_pred, axis=1)
+prediction_metrics(model, X_test, y_test, age_classes)
 
-# Print classification report and confusion matrix
 
-mcc = matthews_corrcoef(y_test_int, y_pred_int)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
-print("BASE SVM finished")
+#####HOG
 
-""#### HOG
-
-print("HOG started")
 # Extract HOG features from the images
 hog_features = []
 for img in images:
@@ -236,44 +213,95 @@ mean = np.mean(hog_features, axis=0)
 std = np.std(hog_features, axis=0)
 hog_features_norm = (hog_features - mean) / std
 
-##### Gender
+###### GEnder
 X_train, X_test, y_train, y_test = train_test_split(hog_features_norm, genders, test_size=0.2, random_state=42)
 
-clf = SVC()
-clf.fit(X_train, y_train)
+cnn = Sequential()
 
-y_pred = clf.predict(X_test)
+#tratado
+cnn.add(layers.Reshape((144, 144, 1), input_shape=(20736,)))
+#cnn.add(layers.Conv2D(16, (3, 3), padding='same', activation='relu', input_shape=X_train[1].shape))
 
-# Print classification report and confusion matrix
+cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
+cnn.add(layers.MaxPooling2D(2,2))
+cnn.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+cnn.add(layers.MaxPooling2D(2,2))
+cnn.add(Flatten())
+cnn.add(Dense(64, activation='relu'))
+cnn.add(layers.Dropout(0.2))
 
-mcc = matthews_corrcoef(y_test, y_pred)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-print(classification_report(y_test, y_pred))
-print(confusion_matrix(y_test, y_pred))
+#output layer with 2 filters for number of classes the model will choose to do predictions
+#and since gender is just binary classification sigmoid is appropriate
+#when doing classification for age (wont be binary classification) then softmax is good choice
+cnn.add(Dense(1, activation='sigmoid'))
 
-#### AGE
-X_train, X_test, y_train, y_test = train_test_split(hog_features_norm, age_categories, test_size=0.2, random_state=42)
-clf = OneVsRestClassifier(SVC())
-clf.fit(X_train, y_train)
+#cnn.summary()
 
-# Convert one-hot encoded labels to integer form
-y_pred = clf.predict(X_test)
+X_train, X_test, y_train, y_test = train_test_split(hog_features_norm, genders, test_size=0.2, random_state=42)
 
-y_test_int = np.argmax(y_test, axis=1)
-y_pred_int = np.argmax(y_pred, axis=1)
+X_train = np.asarray(X_train)
+y_train = np.asarray(y_train)
 
-# Print classification report and confusion matrix
+X_test = np.asarray(X_test)
+y_test = np.asarray(y_test)
 
-mcc = matthews_corrcoef(y_test_int, y_pred_int)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
-print("HOG finished")
+cnn.compile(optimizer="adam", loss="binary_crossentropy")
 
-#### ORB
-print("ORB Started")
+history_hog_gender = cnn.fit(X_train, y_train,
+                    epochs=2,
+                    batch_size=32,
+                    validation_data=(X_test, y_test))
+
+prediction_metrics(cnn, X_test, y_test, genders)
+
+
+##### AGE
+
+cnn = Sequential()
+
+cnn.add(layers.Reshape((144, 144, 1), input_shape=(20736,)))
+#cnn.add(layers.Conv2D(16, (3, 3), padding='same', activation='relu', input_shape=X_train[1].shape))
+
+cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
+cnn.add(layers.MaxPooling2D(2,2))
+cnn.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+cnn.add(layers.MaxPooling2D(2,2))
+cnn.add(Flatten())
+cnn.add(Dense(64, activation='relu'))
+cnn.add(layers.Dropout(0.2))
+
+#output layer with 2 filters for number of classes the model will choose to do predictions
+#and since gender is just binary classification sigmoid is appropriate
+#when doing classification for age (wont be binary classification) then softmax is good choice
+cnn.add(Dense(6, activation='softmax'))
+
+#cnn.summary()
+
+X_train, X_test, y_train, y_test = train_test_split(hog_features_norm, age_categories, test_size = 0.2,shuffle = True)
+
+X_train = np.asarray(X_train)
+y_train = np.asarray(y_train)
+
+X_test = np.asarray(X_test)
+y_test = np.asarray(y_test)
+
+cnn.compile(loss='categorical_crossentropy',
+            optimizer='adam',
+            metrics=['accuracy'])
+
+history_hog_age = cnn.fit(X_train, y_train,
+        batch_size=8,
+        epochs=2,
+        validation_data=(X_test, y_test),)
+
+
+prediction_metrics(cnn, X_test, y_test, age_classes)
+
+
+
+##### ORB
 
 image_check = images[1]
 
@@ -287,6 +315,7 @@ img2 = cv2.drawKeypoints(image_check, kp, None, color=(0,255,0), flags=0)
 plt.imshow(img2)
 plt.show()
 
+image_check = images[1]
 
 orb = cv2.ORB_create()
 # define minimum and maximum keypoints
@@ -314,65 +343,82 @@ for i, img in enumerate(images):
     orb_features.append(np.ndarray.flatten(descriptors))
     orb_genders.append(genders[i])
     orb_ages.append(age_categories[i])
-
+    
 mean = np.mean(orb_features, axis=0)
 std = np.std(orb_features, axis=0)
 orb_features_norm = (orb_features - mean) / std
 
-##### GEnder
-X_train, X_test, y_train, y_test = train_test_split(orb_features_norm, orb_genders, test_size=0.2, random_state=42)
+##### GENDER
 
-clf = SVC()
-clf.fit(X_train, y_train)
+X_train, X_test, y_train, y_test = train_test_split(orb_features_norm, orb_genders, test_size=0.20, random_state=42)
 
-# Evaluate the classifier on the testing data
-y_pred = clf.predict(X_test)
+X_train = np.asarray(X_train)
+y_train = np.asarray(y_train)
 
-mcc = matthews_corrcoef(y_test, y_pred)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-#print("Accuracy: ", accuracy)
-print(classification_report(y_test, y_pred))
-#confusion_matrix(y_test, y_pred)
+X_test = np.asarray(X_test)
+y_test = np.asarray(y_test)
 
-labelGender = list(set(genders))
+cnn = Sequential()
 
-# assume y_true and y_pred are the true and predicted labels, respectively
-cm = confusion_matrix(y_test, y_pred)
+# Input shape is (3200,)
+cnn.add(layers.Reshape((50, 64, 1), input_shape=X_train[0].shape))
+cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
+##cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+cnn.add(Flatten())
+cnn.add(layers.Dense(64, activation='relu'))
+cnn.add(layers.Dropout(0.2))
+cnn.add(layers.Dense(1, activation='sigmoid'))
 
-# create a heatmap of the confusion matrix using seaborn
-sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+#cnn.summary()
 
-# set plot labels and title
-plt.xlabel('Predicted Label')
-plt.ylabel('True Label')
-plt.title('Confusion Matrix')
-plt.savefig('CM SVM Gender ORB.png')
+cnn.compile(optimizer="adam", loss="binary_crossentropy")
+
+history_orb_gender = cnn.fit(X_train, y_train,
+                        epochs=2,
+                        batch_size=32,
+                        validation_data=(X_test, y_test))
+
+prediction_metrics(cnn, X_test, y_test, orb_genders)
 
 
 ##### AGE
-X_train, X_test, y_train, y_test = train_test_split(orb_features_norm, orb_ages, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(orb_features_norm, orb_ages, test_size=0.20, random_state=42)
 
-clf = OneVsRestClassifier(SVC())
-clf.fit(X_train, y_train)
+X_train = np.asarray(X_train)
+y_train = np.asarray(y_train)
 
-y_pred = clf.predict(X_test)
+X_test = np.asarray(X_test)
+y_test = np.asarray(y_test)
 
-y_test_int = np.argmax(y_test, axis=1)
-y_pred_int = np.argmax(y_pred, axis=1)
+cnn = Sequential()
 
-# Print classification report and confusion matrix
+# Input shape is (3200,)
+cnn.add(layers.Reshape((50, 64, 1), input_shape=X_train[0].shape))
+cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(32, (3, 3), padding='same', activation='relu'))
+##cnn.add(layers.MaxPooling2D((2, 2)))
+cnn.add(layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+cnn.add(Flatten())
+cnn.add(layers.Dense(64, activation='relu'))
+cnn.add(layers.Dropout(0.2))
+cnn.add(layers.Dense(6, activation='softmax'))
 
-mcc = matthews_corrcoef(y_test_int, y_pred_int)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
-print("ORB Finished")
+#cnn.summary()
+
+cnn.compile(optimizer="adam", loss="binary_crossentropy")
+
+history_orb_gender = cnn.fit(X_train, y_train,
+                        epochs=2,
+                        batch_size=32,
+                        validation_data=(X_test, y_test))
+
+prediction_metrics(cnn, X_test, y_test, age_classes)
 
 
-print("VGG Started")
-#### VGG16
+##### VGG16
+
 VGG_model = VGG16(weights='imagenet', include_top=False, input_shape=(200, 200, 3))
 
 for layer in VGG_model.layers:
@@ -383,65 +429,54 @@ VGG_model.summary()
 X = np.stack(images)
 X = VGG_model.predict(X)
 
-##### Gender
-X_svm = X.reshape(X.shape[0], -1)
-X_train, X_test, y_train, y_test = train_test_split(X_svm, genders, test_size=0.2, random_state=42)
+##### GENDER
 
-clf = SVC()
-clf.fit(X_train, y_train)
+X_train, X_test, y_train, y_test = train_test_split(X, genders, test_size=0.2, random_state=42)
 
-# Evaluate the classifier on the testing data
-y_pred = clf.predict(X_test)
+X_train = np.asarray(X_train)
+y_train = np.asarray(y_train)
 
-mcc = matthews_corrcoef(y_test, y_pred)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-#print("Accuracy: ", accuracy)
-print(classification_report(y_test, y_pred))
-#confusion_matrix(y_test, y_pred)
+X_test = np.asarray(X_test)
+y_test = np.asarray(y_test)
 
-labelGender = list(set(genders))
-
-# assume y_true and y_pred are the true and predicted labels, respectively
-cm = confusion_matrix(y_test, y_pred)
-
-# create a heatmap of the confusion matrix using seaborn
-sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
-
-# set plot labels and title
-plt.xlabel('Predicted Label')
-plt.ylabel('True Label')
-plt.title('Confusion Matrix')
-plt.savefig('CM VGG16 SVM Gender.png')
-
-#### AGE
-X_train, X_test, y_train, y_test = train_test_split(X_svm, age_categories, test_size=0.2, random_state=42)#variar a percentagem split
-
-clf = OneVsRestClassifier(SVC())
-clf.fit(X_train, y_train)
-
-# Convert one-hot encoded labels to integer form
-y_pred = clf.predict(X_test)
-
-y_test_int = np.argmax(y_test, axis=1)
-y_pred_int = np.argmax(y_pred, axis=1)
-
-# Print classification report and confusion matrix
-
-mcc = matthews_corrcoef(y_test_int, y_pred_int)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
-print("VGG Finish")
+model = CNN((6, 6, 512), 1, 'sigmoid')
 
 
-print("Autoencoder Started")
-#### AUtoencoder
+#for age use categorical_crossentropy instead
+model.compile(optimizer="adam", loss="binary_crossentropy")
+
+history_VGG16_gender = model.fit(X_train, y_train,
+                    epochs=3,
+                    batch_size=32,
+                    validation_data=(X_test, y_test))
+
+
+prediction_metrics(model, X_test, y_test, genders)
+
+
+##### AGE
+
+X_train, X_test, y_train, y_test = train_test_split(X, age_categories, test_size=0.2, random_state=42)
+
+model = CNN((6,6,512), 6, 'softmax')
+
+model.compile(loss='categorical_crossentropy',
+            optimizer='adam',
+            metrics=['accuracy'])
+
+history_VGG16_age = model.fit(X_train, y_train,
+        batch_size=8,
+        epochs=2,
+        validation_data=(X_test, y_test),)
+
+prediction_metrics(model, X_test, y_train, age_classes)
+
+
+#### AUTOENCODER
 input = layers.Input(shape=(200, 200, 3))
 
 #valor alto apanha artefactos, e valor baixo nao captura bem as features da imagem
-latent_dim = 2000"""
+latent_dim = 2000
 
 
 ## Classe 
@@ -488,7 +523,6 @@ output = layers.Conv2DTranspose(3, (3,3), activation='sigmoid', padding='same', 
 #example:
 #x = layers.Conv2D(16, (3,3), activation='relu', padding='same', strides = 2)(x)
 
-
 # Autoencoder
 autoencoder = Model(input, output)
 
@@ -496,8 +530,11 @@ autoencoder = Model(input, output)
 autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
 #autoencoder.summary()
 
-##### Gender
+
+##### GENDER
+
 X_train, X_test, y_train, y_test = train_test_split(images, genders, test_size=0.2, random_state=42)
+
 
 X_train = np.array(X_train)
 X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape[2], 3))
@@ -505,8 +542,11 @@ X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], X_train.shape
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2], 3))
 
+input = layers.Input(shape=(200, 200, 3))
+
+# binary cross entropy is good for image feature extraction especially when images are normalized
 autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
-autoencoder.summary()### Save this completly
+autoencoder.summary()
 
 #using validation_data is good for detecting overfitting as 
 #it does early stopping when the performance is no longer improving
@@ -518,44 +558,36 @@ autoencoder.fit(x = X_train,
                 batch_size = 32,
                 validation_data = (X_test, X_test),)
 
+
 new_model = Model(input, enc)
+
 
 pred_train = new_model.predict(X_train)
 pred_test = new_model.predict(X_test)
 
-encoded_X_train = pred_train.reshape((pred_train.shape[0], -1))
-encoded_X_test = pred_test.reshape((pred_test.shape[0], -1))
 
-clf = SVC()
-clf.fit(encoded_X_train, y_train)
 
-# Evaluate the classifier on the testing data
-y_pred = clf.predict(encoded_X_test)
+encoded_train = np.asarray(pred_train)
+y_train = np.asarray(y_train)
 
-mcc = matthews_corrcoef(y_test, y_pred)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-#print("Accuracy: ", accuracy)
-print(classification_report(y_test, y_pred))
-#confusion_matrix(y_test, y_pred)
+encoded_test = np.asarray(pred_test)
+y_test = np.asarray(y_test)
 
-labelGender = list(set(genders))
+model = CNN((200, 200, 3), 1, 'sigmoid')
 
-# assume y_true and y_pred are the true and predicted labels, respectively
-cm = confusion_matrix(y_test, y_pred)
+#for age use categorical_crossentropy instead
+model.compile(optimizer="adam", loss="binary_crossentropy")
 
-# create a heatmap of the confusion matrix using seaborn
-sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+history_autoencoder_gender = model.fit(encoded_train, y_train,
+                    epochs=3,
+                    batch_size=32,
+                    validation_data=(encoded_test, y_test))
 
-# set plot labels and title
-plt.xlabel('Predicted Label')
-plt.ylabel('True Label')
-plt.title('Confusion Matrix')
-plt.savefig('CM SVM Gender AE.png')
+prediction_metrics(model, encoded_test, y_test, genders)
 
-print("AC gender finished")
 
-#### AGE
+##### AGE
+
 
 X_train, X_test, y_train, y_test = train_test_split(images, age_categories, test_size=0.2, random_state=42)
 
@@ -567,10 +599,6 @@ X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], X_test.shape[2], 
 
 input = layers.Input(shape=(200, 200, 3))
 
-# binary cross entropy is good for image feature extraction especially when images are normalized
-autoencoder.compile(optimizer="adam", loss='categorical_crossentropy')
-autoencoder.summary()
-
 autoencoder.fit(x = X_train, 
                 y = X_train,
                 epochs = 2,
@@ -579,36 +607,31 @@ autoencoder.fit(x = X_train,
                 validation_data = (X_test, X_test),
 )
 
+
 new_model = Model(input, enc)
 
 pred_train = new_model.predict(X_train)
 pred_test = new_model.predict(X_test)
 
 
-encoded_train = pred_train.reshape((pred_train.shape[0], -1))
-encoded_test = pred_test.reshape((pred_test.shape[0], -1))
+encoded_train = np.asarray(pred_train)
+y_train = np.asarray(y_train)
 
-clf = OneVsRestClassifier(SVC())
-clf.fit(encoded_train, y_train)
+encoded_test = np.asarray(pred_test)
+y_test = np.asarray(y_test)
 
-# Convert one-hot encoded labels to integer form
-y_pred = clf.predict(encoded_test)
-
-y_test_int = np.argmax(y_test, axis=1)
-y_pred_int = np.argmax(y_pred, axis=1)
-
-# Print classification report and confusion matrix
-
-mcc = matthews_corrcoef(y_test_int, y_pred_int)
-#accuracy = accuracy_score(y_test, y_pred)
-print("MCC: ", mcc)
-print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
-print("Autoencoder Finish")
+model = CNN((200,200,3), 6, 'softmax')
 
 
-finish_time = datetime.now()
-finish_time = finish_time.strftime("%H:%M:%S")
+model.compile(loss='categorical_crossentropy',
+            optimizer='adam',
+            metrics=['accuracy'])
 
-print("Initial Time =", initial_time)
-print("Current Time =", finish_time)
+history_base_age = model.fit(encoded_train, y_train,
+        batch_size=8,
+        epochs=2,
+        validation_data=(encoded_test, y_test),)
+
+
+
+prediction_metrics(model, X_test, y_test, age_classes)
