@@ -64,8 +64,10 @@ def prediction_metrics(model, X_test, y_test, classes):
 
 ### Data
 print("data gathering started")
+#path server
+path = "/UTKFace/"
 #path martim
-path = "../../../../DadosProj/UTKFace/"
+#path = "../../../../DadosProj/UTKFace/"
 #path alex
 #path = "../../../data_project/UTKFace/"
 
@@ -136,19 +138,19 @@ print("Age Classes finished")
 
 ### Plots Data distribution
 
-x_genders = list(set(genders))
-y_genders= [genders.count(i) for i in x_genders]
-plt.bar(x_genders,y_genders)
-plt.show()
-print("Max value:",max(genders))
-plt.savefig('Plots Data distribution Gender.png')
+#x_genders = list(set(genders))
+#y_genders= [genders.count(i) for i in x_genders]
+#plt.bar(x_genders,y_genders)
+#plt.show()
+#print("Max value:",max(genders))
+#plt.savefig('Plots Data distribution Gender.png')
 
-x_ages = list(set(age_classes))
-y_ages = [age_classes.count(i) for i in x_ages]
-plt.bar(x_ages,y_ages)
-plt.show()
-print("Max value:",max(age_classes))
-plt.savefig('Plots Data distribution Age.png')
+#x_ages = list(set(age_classes))
+#y_ages = [age_classes.count(i) for i in x_ages]
+#plt.bar(x_ages,y_ages)
+#plt.show()
+#print("Max value:",max(age_classes))
+#plt.savefig('Plots Data distribution Age.png')
 
 #### SVM
 
