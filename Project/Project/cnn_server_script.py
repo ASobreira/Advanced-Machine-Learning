@@ -27,43 +27,24 @@ from sklearn.svm import SVC
 import math
 from keras.utils.np_utils import to_categorical
 from sklearn.metrics import classification_report, confusion_matrix
+from datetime import datetime
+
+initial_time = datetime.now()
+initial_time = initial_time.strftime("%H:%M:%S")
 
 #######
 def display(img):
     plt.imshow(img)
     plt.show()
 
-def prediction_metrics(model, X_test, y_test, classes):
-    preds = []
-    truth = []
-    y_hat = model.predict(X_test)
-
-    for i in range(X_test.shape[0]):
-        
-        predict_index = np.argmax(y_hat[i])
-        preds.append(predict_index) 
-        
-        true_index = np.argmax(y_test[i])
-        truth.append(true_index)
-        
-    mcc = matthews_corrcoef(truth, preds)
-    print("MCC: ", mcc)
-    label = list(set(classes))
-    cm = confusion_matrix(truth, preds)
-    sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=label, yticklabels=label)
-    plt.xlabel('Predicted Label')
-    plt.ylabel('True Label')
-    plt.title('Confusion Matrix')
-    plt.savefig("fig.png" + str(model) + " " + str(classes))
-    print(classification_report(truth, preds))
-    
-#### 
+### Data
+print("data gathering started")
 #path server
 #path = "/UTKFace/"
 #path martim
-#path = "../../../../DadosProj/UTKFace/"
+path = "../../../../DadosProj/UTKFace/"
 #path alex
-path = "../../../data_project/UTKFace/"
+#path = "../../../data_project/UTKFace/"
 
 files = os.listdir(path)
 size = len(files)
@@ -101,8 +82,11 @@ for file in files:
     
 X = np.squeeze(images)
 
-#####
 
+print("data gathering finished")
+
+### Age classes
+print("Age Classes started")
 age_classes = []
 for i in ages:
     i = int(i)
@@ -130,10 +114,12 @@ age_labels = ["Baby",   # index 0
 
 age_categories = to_categorical(age_classes, num_classes=6)
 age_categories[:20]
+print("Age Classes finished")
 
-##### BASE CNN
+###CNN
 
-
+#### BASE
+print("BASE CNN started")
 def CNN (input_shape, output, activation):
     model = tf.keras.Sequential()
 
@@ -177,7 +163,22 @@ history_base_gender = model.fit(X_train, y_train,
                     batch_size=32,
                     validation_data=(X_test, y_test))
 
-prediction_metrics(model, X_test, y_test, age_classes)
+###### Metrics
+y_pred = model.predict(X_test)
+mcc = matthews_corrcoef(y_test, y_pred)
+print("MCC: ", mcc)
+print(classification_report(y_test, y_pred))
+#confusion_matrix(y_test, y_pred)
+labelGender = list(set(genders))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test, y_pred)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_base_CNN_gender.png')
 
 ###### AGE
 X_train, X_test, y_train, y_test = train_test_split(X, age_categories, test_size = 0.2, shuffle = True)
@@ -192,11 +193,35 @@ history_base_age = model.fit(X_train, y_train,
         epochs=2,
         validation_data=(X_test, y_test),)
 
-prediction_metrics(model, X_test, y_test, age_classes)
+y_pred = model.predict(X_test)
 
+y_test_int = np.argmax(y_test, axis=1)
+y_pred_int = np.argmax(y_pred, axis=1)
 
-"""#####HOG
+# Print classification report and confusion matrix
+mcc = matthews_corrcoef(y_test_int, y_pred_int)
 
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelAge = list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelAge, yticklabels=labelAge)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_base_CNN_age.png')
+
+print("BASE CNN finished")
+
+#### HOG
+
+print("HOG started")
 # Extract HOG features from the images
 hog_features = []
 for img in images:
@@ -213,12 +238,10 @@ mean = np.mean(hog_features, axis=0)
 std = np.std(hog_features, axis=0)
 hog_features_norm = (hog_features - mean) / std
 
-###### GEnder
-X_train, X_test, y_train, y_test = train_test_split(hog_features_norm, genders, test_size=0.2, random_state=42)
+
 
 cnn = Sequential()
 
-#tratado
 cnn.add(layers.Reshape((144, 144, 1), input_shape=(20736,)))
 #cnn.add(layers.Conv2D(16, (3, 3), padding='same', activation='relu', input_shape=X_train[1].shape))
 
@@ -238,6 +261,7 @@ cnn.add(Dense(1, activation='sigmoid'))
 
 #cnn.summary()
 
+###### Gender
 X_train, X_test, y_train, y_test = train_test_split(hog_features_norm, genders, test_size=0.2, random_state=42)
 
 X_train = np.asarray(X_train)
@@ -253,7 +277,28 @@ history_hog_gender = cnn.fit(X_train, y_train,
                     batch_size=32,
                     validation_data=(X_test, y_test))
 
-prediction_metrics(cnn, X_test, y_test, genders)
+y_pred = cnn.predict(X_test)
+
+mcc = matthews_corrcoef(y_test, y_pred)
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test, y_pred))
+#confusion_matrix(y_test, y_pred)
+
+labelGender = list(set(genders))
+
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test, y_pred)
+
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_HOG_CNN_gender.png')
 
 
 ##### AGE
@@ -297,11 +342,36 @@ history_hog_age = cnn.fit(X_train, y_train,
         validation_data=(X_test, y_test),)
 
 
-prediction_metrics(cnn, X_test, y_test, age_classes)
+# Convert one-hot encoded labels to integer form
+y_pred = cnn.predict(X_test)
 
+y_test_int = np.argmax(y_test, axis=1)
+y_pred_int = np.argmax(y_pred, axis=1)
+
+# Print classification report and confusion matrix
+mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelAge = list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelAge, yticklabels=labelAge)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_HOG_CNN_age.png')
+
+print("HOG finished")
 
 
 ##### ORB
+print("ORB Started")
 
 image_check = images[1]
 
@@ -380,7 +450,29 @@ history_orb_gender = cnn.fit(X_train, y_train,
                         batch_size=32,
                         validation_data=(X_test, y_test))
 
-prediction_metrics(cnn, X_test, y_test, orb_genders)
+# Evaluate the classifier on the testing data
+y_pred = cnn.predict(X_test)
+
+mcc = matthews_corrcoef(y_test, y_pred)
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test, y_pred))
+#confusion_matrix(y_test, y_pred)
+
+labelGender = list(set(genders))
+
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test, y_pred)
+
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_ORB_CNN_gender.png')
 
 
 ##### AGE
@@ -414,11 +506,34 @@ history_orb_gender = cnn.fit(X_train, y_train,
                         batch_size=32,
                         validation_data=(X_test, y_test))
 
-prediction_metrics(cnn, X_test, y_test, age_classes)
+y_pred = cnn.predict(X_test)
 
+y_test_int = np.argmax(y_test, axis=1)
+y_pred_int = np.argmax(y_pred, axis=1)
+
+# Print classification report and confusion matrix
+mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelAge= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelAge, yticklabels=labelAge)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.savefig('CM_ORB_CNN_age.png')
+
+
+print("ORB Finished")
 
 ##### VGG16
-
+print("VGG Started")
 VGG_model = VGG16(weights='imagenet', include_top=False, input_shape=(200, 200, 3))
 
 for layer in VGG_model.layers:
@@ -451,7 +566,29 @@ history_VGG16_gender = model.fit(X_train, y_train,
                     validation_data=(X_test, y_test))
 
 
-prediction_metrics(model, X_test, y_test, genders)
+# Evaluate the classifier on the testing data
+y_pred = model.predict(X_test)
+
+mcc = matthews_corrcoef(y_test, y_pred)
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test, y_pred))
+#confusion_matrix(y_test, y_pred)
+
+labelGender = list(set(genders))
+
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test, y_pred)
+
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_VGG_CNN_gender.png')
 
 
 ##### AGE
@@ -469,10 +606,36 @@ history_VGG16_age = model.fit(X_train, y_train,
         epochs=2,
         validation_data=(X_test, y_test),)
 
-prediction_metrics(model, X_test, y_train, age_classes)
 
+# Convert one-hot encoded labels to integer form
+y_pred = model.predict(X_test)
+
+y_test_int = np.argmax(y_test, axis=1)
+y_pred_int = np.argmax(y_pred, axis=1)
+
+# Print classification report and confusion matrix
+mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelAge= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelAge, yticklabels=labelAge)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_VGG_CNN_age.png')
+
+print("VGG Finish")
 
 #### AUTOENCODER
+print("Autoencoder Started")
 input = layers.Input(shape=(200, 200, 3))
 
 #valor alto apanha artefactos, e valor baixo nao captura bem as features da imagem
@@ -595,12 +758,34 @@ history_autoencoder_gender = cnn.fit(encoded_train, y_train,
                     batch_size=32,
                     validation_data=(encoded_test, y_test))
 
-prediction_metrics(cnn, encoded_test, y_test, genders)
+# Evaluate the classifier on the testing data
+y_pred = cnn.predict(encoded_test)
 
+mcc = matthews_corrcoef(y_test, y_pred)
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test, y_pred))
+#confusion_matrix(y_test, y_pred)
+
+labelGender = list(set(genders))
+
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test, y_pred)
+
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_AE_CNN_gender.png')
+
+print("cnn encoder for gender finished")
 
 ##### AGE
-
-
+print("cnn encoder for age started")
 X_train, X_test, y_train, y_test = train_test_split(images, age_categories, test_size=0.2, random_state=42)
 
 X_train = np.array(X_train)
@@ -656,6 +841,30 @@ history_base_age = cnn.fit(encoded_train, y_train,
         epochs=2,
         validation_data=(encoded_test, y_test),)
 
+# Convert one-hot encoded labels to integer form
+y_pred = cnn.predict(encoded_test)
+
+y_test_int = np.argmax(y_test, axis=1)
+y_pred_int = np.argmax(y_pred, axis=1)
+
+# Print classification report and confusion matrix
+mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
+#accuracy = accuracy_score(y_test, y_pred)
+print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
+print(classification_report(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelage= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelage, yticklabels=labelage)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_AE_SVM_age.png')
 
 
-prediction_metrics(cnn, X_test, y_test, age_classes)"""
+print("svm encoder for age finished")
