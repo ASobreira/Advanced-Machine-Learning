@@ -147,7 +147,7 @@ sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, ytic
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.title('Confusion Matrix')
-plt.savefig('CM SVM Gender.png')
+plt.savefig('CM_base_SVM_gender.png')
 
 ##### Age
 X_train, X_test, y_train, y_test = train_test_split(flattened_images_array, age_categories, test_size=0.2, random_state=42)
@@ -162,12 +162,24 @@ y_test_int = np.argmax(y_test, axis=1)
 y_pred_int = np.argmax(y_pred, axis=1)
 
 # Print classification report and confusion matrix
-
 mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
 #accuracy = accuracy_score(y_test, y_pred)
 print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
 print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelage= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelage, yticklabels=labelage)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_base_SVM_age.png')
+
 print("BASE SVM finished")
 
 
