@@ -182,7 +182,6 @@ plt.savefig('CM_base_SVM_age.png')
 
 print("BASE SVM finished")
 
-
 #### HOG
 
 print("HOG started")
@@ -210,15 +209,28 @@ clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
 
-# Print classification report and confusion matrix
-
 mcc = matthews_corrcoef(y_test, y_pred)
 #accuracy = accuracy_score(y_test, y_pred)
 print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
 print(classification_report(y_test, y_pred))
-print(confusion_matrix(y_test, y_pred))
+#confusion_matrix(y_test, y_pred)
 
-#### AGE
+labelGender = list(set(genders))
+
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test, y_pred)
+
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
+
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_HOG_SVM_gender.png')
+
+##### AGE
 X_train, X_test, y_train, y_test = train_test_split(hog_features_norm, age_categories, test_size=0.2, random_state=42)
 clf = OneVsRestClassifier(SVC())
 clf.fit(X_train, y_train)
@@ -230,12 +242,24 @@ y_test_int = np.argmax(y_test, axis=1)
 y_pred_int = np.argmax(y_pred, axis=1)
 
 # Print classification report and confusion matrix
-
 mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
 #accuracy = accuracy_score(y_test, y_pred)
 print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
 print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelage= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelage, yticklabels=labelage)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_HOG_SVM_age.png')
+
 print("HOG finished")
 
 #### ORB
@@ -285,7 +309,7 @@ mean = np.mean(orb_features, axis=0)
 std = np.std(orb_features, axis=0)
 orb_features_norm = (orb_features - mean) / std
 
-##### GEnder
+##### Gender
 X_train, X_test, y_train, y_test = train_test_split(orb_features_norm, orb_genders, test_size=0.2, random_state=42)
 
 clf = SVC()
@@ -313,8 +337,7 @@ sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, ytic
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.title('Confusion Matrix')
-plt.savefig('CM SVM Gender ORB.png')
-
+plt.savefig('CM_ORB_SVM_gender.png')
 
 ##### AGE
 X_train, X_test, y_train, y_test = train_test_split(orb_features_norm, orb_ages, test_size=0.2, random_state=42)
@@ -328,12 +351,22 @@ y_test_int = np.argmax(y_test, axis=1)
 y_pred_int = np.argmax(y_pred, axis=1)
 
 # Print classification report and confusion matrix
-
 mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
 #accuracy = accuracy_score(y_test, y_pred)
 print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
 print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelage= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelage, yticklabels=labelage)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.savefig('CM_ORB_SVM_age.png')
 print("ORB Finished")
 
 
@@ -378,7 +411,7 @@ sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, ytic
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.title('Confusion Matrix')
-plt.savefig('CM VGG16 SVM Gender.png')
+plt.savefig('CM_VGG_SVM_gender.png')
 
 #### AGE
 X_train, X_test, y_train, y_test = train_test_split(X_svm, age_categories, test_size=0.2, random_state=42)#variar a percentagem split
@@ -393,12 +426,24 @@ y_test_int = np.argmax(y_test, axis=1)
 y_pred_int = np.argmax(y_pred, axis=1)
 
 # Print classification report and confusion matrix
-
 mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
 #accuracy = accuracy_score(y_test, y_pred)
 print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
 print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelage= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelage, yticklabels=labelage)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_VGG_SVM_age.png')
+
 print("VGG Finish")
 
 
@@ -409,30 +454,12 @@ input = layers.Input(shape=(200, 200, 3))
 #valor alto apanha artefactos, e valor baixo nao captura bem as features da imagem
 latent_dim = 2000
 
-
 ## Classe 
 
 # Encoder
 
 #didnt increase filter count in encoder and decrease equally in decoder because
 #it can lead to overfitting
-
-
-
-input = layers.Input(shape=(200, 200, 3))
-
-#valor alto apanha artefactos, e valor baixo nao captura bem as features da imagem
-latent_dim = 2000
-
-
-## Classe 
-print("encoder started")
-# Encoder
-
-#didnt increase filter count in encoder and decrease equally in decoder because
-#it can lead to overfitting
-
-
 
 x = layers.Conv2D(64, (3,3), activation='relu', padding='same', strides = 2)(input)
 #x = layers.MaxPooling2D((2,2), padding='same')(x)#dividir imagem por factor de 2
@@ -464,7 +491,6 @@ x = layers.Conv2DTranspose(64, (3,3), activation='relu', padding='same', strides
 #x = layers.UpSampling2D((2,2))(x)
 output = layers.Conv2DTranspose(3, (3,3), activation='sigmoid', padding='same', strides = 2)(x)
 
-
 #maybe use strides in the layers too
 #example:
 #x = layers.Conv2D(16, (3,3), activation='relu', padding='same', strides = 2)(x)
@@ -477,6 +503,7 @@ autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
 #autoencoder.summary()
 
 print("svm encoder for gender started")
+
 ##### Gender
 X_train, X_test, y_train, y_test = train_test_split(images, genders, test_size=0.2, random_state=42)
 
@@ -509,7 +536,6 @@ pred_test = new_model.predict(X_test)
 encoded_X_train = pred_train.reshape((pred_train.shape[0], -1))
 encoded_X_test = pred_test.reshape((pred_test.shape[0], -1))
 
-
 clf = SVC()
 clf.fit(encoded_X_train, y_train)
 
@@ -535,10 +561,10 @@ sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, ytic
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.title('Confusion Matrix')
-plt.savefig('CM SVM Gender AE.png')
+plt.savefig('CM_AE_SVM_gender.png')
 
-print("AC gender finished")
 print("svm encoder for gender finished")
+
 #### AGE
 print("svm encoder for age started")
 X_train, X_test, y_train, y_test = train_test_split(images, age_categories, test_size=0.2, random_state=42)
@@ -580,10 +606,23 @@ y_test_int = np.argmax(y_test, axis=1)
 y_pred_int = np.argmax(y_pred, axis=1)
 
 # Print classification report and confusion matrix
-
 mcc = matthews_corrcoef(y_test_int, y_pred_int)
+
 #accuracy = accuracy_score(y_test, y_pred)
 print("MCC: ", mcc)
+#print("Accuracy: ", accuracy)
 print(classification_report(y_test_int, y_pred_int))
-print(confusion_matrix(y_test_int, y_pred_int))
+#confusion_matrix(y_test, y_pred)
+labelage= list(set(age_classes))
+# assume y_true and y_pred are the true and predicted labels, respectively
+cm = confusion_matrix(y_test_int, y_pred_int)
+# create a heatmap of the confusion matrix using seaborn
+sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelage, yticklabels=labelage)
+# set plot labels and title
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.savefig('CM_AE_SVM_age.png')
+
+
 print("svm encoder for age finished")
