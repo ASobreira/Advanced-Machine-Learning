@@ -54,7 +54,7 @@ def prediction_metrics(model, X_test, y_test, classes):
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
-    plt.savefig("fig" + str(model) + " " + str(classes))
+    plt.savefig("fig.png" + str(model) + " " + str(classes))
     print(classification_report(truth, preds))
     
 #### 
@@ -152,7 +152,7 @@ def CNN (input_shape, output, activation):
     model.add(tf.keras.layers.Dropout(0.5))
     model.add(tf.keras.layers.Dense(output, activation=activation))
     
-    model.summary()
+    #model.summary()
     
     return model
 
@@ -195,7 +195,7 @@ history_base_age = model.fit(X_train, y_train,
 prediction_metrics(model, X_test, y_test, age_classes)
 
 
-#####HOG
+"""#####HOG
 
 # Extract HOG features from the images
 hog_features = []
@@ -658,4 +658,4 @@ history_base_age = cnn.fit(encoded_train, y_train,
 
 
 
-prediction_metrics(cnn, X_test, y_test, age_classes)
+prediction_metrics(cnn, X_test, y_test, age_classes)"""

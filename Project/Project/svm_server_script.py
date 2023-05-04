@@ -1,4 +1,4 @@
-### packages
+### packages ###
 import numpy as np
 import pandas as pd 
 import os
@@ -37,30 +37,6 @@ initial_time = initial_time.strftime("%H:%M:%S")
 def display(img):
     plt.imshow(img)
     plt.show()
-
-def prediction_metrics(model, X_test, y_test, classes):
-    preds = []
-    truth = []
-    y_hat = model.predict(X_test)
-
-    for i in range(X_test.shape[0]):
-        
-        predict_index = np.argmax(y_hat[i])
-        preds.append(predict_index) 
-        
-        true_index = np.argmax(y_test[i])
-        truth.append(true_index)
-        
-    mcc = matthews_corrcoef(truth, preds)
-    print("MCC: ", mcc)
-    label = list(set(classes))
-    cm = confusion_matrix(truth, preds)
-    sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=label, yticklabels=label)
-    plt.xlabel('Predicted Label')
-    plt.ylabel('True Label')
-    plt.title('Confusion Matrix')
-    plt.show()
-    print(classification_report(truth, preds))
 
 ### Data
 print("data gathering started")
@@ -136,25 +112,9 @@ age_categories = to_categorical(age_classes, num_classes=6)
 age_categories[:20]
 print("Age Classes finished")
 
-### Plots Data distribution
+###SVM
 
-#x_genders = list(set(genders))
-#y_genders= [genders.count(i) for i in x_genders]
-#plt.bar(x_genders,y_genders)
-#plt.show()
-#print("Max value:",max(genders))
-#plt.savefig('Plots Data distribution Gender.png')
-
-#x_ages = list(set(age_classes))
-#y_ages = [age_classes.count(i) for i in x_ages]
-#plt.bar(x_ages,y_ages)
-#plt.show()
-#print("Max value:",max(age_classes))
-#plt.savefig('Plots Data distribution Age.png')
-
-#### SVM
-
-"""##### BASE
+#### BASE
 print("BASE SVM started")
 flattened_images = []
 
@@ -166,30 +126,23 @@ flattened_images_array = np.array(flattened_images)
 
 print(flattened_images_array.shape)
 
-###### Gender
+##### Gender
 X_train, X_test, y_train, y_test = train_test_split(flattened_images_array, genders, test_size=0.2, random_state=42)
 
 clf = SVC()
 clf.fit(X_train, y_train)
 
-# Evaluate the classifier on the testing data
+###### Metrics
 y_pred = clf.predict(X_test)
-
 mcc = matthews_corrcoef(y_test, y_pred)
-#accuracy = accuracy_score(y_test, y_pred)
 print("MCC: ", mcc)
-#print("Accuracy: ", accuracy)
 print(classification_report(y_test, y_pred))
 #confusion_matrix(y_test, y_pred)
-
 labelGender = list(set(genders))
-
 # assume y_true and y_pred are the true and predicted labels, respectively
 cm = confusion_matrix(y_test, y_pred)
-
 # create a heatmap of the confusion matrix using seaborn
 sns.heatmap(cm, annot=True, cmap="Blues", fmt="d", xticklabels=labelGender, yticklabels=labelGender)
-
 # set plot labels and title
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
@@ -217,7 +170,8 @@ print(classification_report(y_test_int, y_pred_int))
 print(confusion_matrix(y_test_int, y_pred_int))
 print("BASE SVM finished")
 
-""#### HOG
+
+#### HOG
 
 print("HOG started")
 # Extract HOG features from the images
@@ -441,7 +395,7 @@ print("Autoencoder Started")
 input = layers.Input(shape=(200, 200, 3))
 
 #valor alto apanha artefactos, e valor baixo nao captura bem as features da imagem
-latent_dim = 2000"""
+latent_dim = 2000
 
 
 ## Classe 
