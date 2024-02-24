@@ -1,3 +1,3 @@
 # Advanced-Machine-Learning
 
-Folders com os assignments e o projeto
+Classification of Images using Convolutional Neural Networks and Support Vector Machine
